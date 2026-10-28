@@ -1,5 +1,10 @@
 // Forsíða: velja þjónustu og sjá verð og næsta lausa tíma hjá hverjum stað.
 // Les beint úr gagnagrunninum í gegnum get_offers-fallið.
+//
+// Cache Components er virkt, svo allt sem les searchParams, cookies eða
+// gagnagrunninn er inni í <Suspense>. Ramminn birtist strax og tilboðin
+// streymast inn um leið og þau eru tilbúin.
+import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
@@ -31,7 +36,23 @@ const when = (iso: string) =>
     timeZone: "Atlantic/Reykjavik",
   });
 
-export default async function Home({
+export default function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ s?: string; rada?: string }>;
+}) {
+  return (
+    <main style={{ maxWidth: 720, margin: "0 auto", padding: "24px 16px", fontFamily: "system-ui, sans-serif" }}>
+      <h1 style={{ marginBottom: 4 }}>Verkvís</h1>
+      <p style={{ marginTop: 0, color: "#56646B" }}>Berðu saman verð og næsta lausa tíma</p>
+      <Suspense fallback={<p aria-busy="true">Sæki þjónustu og tilboð…</p>}>
+        <Offers searchParams={searchParams} />
+      </Suspense>
+    </main>
+  );
+}
+
+async function Offers({
   searchParams,
 }: {
   searchParams: Promise<{ s?: string; rada?: string }>;
@@ -56,10 +77,7 @@ export default async function Home({
   const current = services.find((s) => s.code === service);
 
   return (
-    <main style={{ maxWidth: 720, margin: "0 auto", padding: "24px 16px", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ marginBottom: 4 }}>Verkvís</h1>
-      <p style={{ marginTop: 0, color: "#56646B" }}>Berðu saman verð og næsta lausa tíma</p>
-
+    <>
       <nav aria-label="Þjónusta" style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "16px 0" }}>
         {services.map((s) => (
           <Link
@@ -122,6 +140,6 @@ export default async function Home({
           </ul>
         </article>
       ))}
-    </main>
+    </>
   );
 }
